@@ -30,6 +30,7 @@ const Dashboard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTaskStatus, setNewTaskStatus] = useState<TaskStatus | null>(null);
   const [filterUserId, setFilterUserId] = useState<number | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,7 +40,6 @@ const Dashboard: React.FC = () => {
           taskService.getAll(),
           userService.getAll(),
         ]);
-        console.log("taskRes: ", taskRes)
         setTasks(taskRes.data);
         setUsers(userRes.data);
       } catch (err) {
@@ -70,6 +70,7 @@ const Dashboard: React.FC = () => {
 
   const handleTaskSave = async (task: Task) => {
     try {
+      setSaveError(null);
       let savedTask: Task;
 
       if (task.id) {
@@ -86,8 +87,13 @@ const Dashboard: React.FC = () => {
 
       setTasks(updatedTasks);
       handleModalClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save task:', error);
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        'Failed to save task. Please try again.';
+      setSaveError(message);
     }
   };
 
@@ -221,6 +227,7 @@ const Dashboard: React.FC = () => {
         onSave={handleTaskSave}
         onDelete={handleTaskDelete}
         user={user}
+        error={saveError}
       />
     </Container>
   );

@@ -7,6 +7,7 @@ import com.example.task_management.entity.User;
 import com.example.task_management.repository.TaskRepository;
 import com.example.task_management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,8 +21,11 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
 
-    public TaskResponse createTask(TaskRequest request) {
-        Task task = mapToEntity(request);
+    public TaskResponse createTask(TaskRequest request, String creatorUsername) {
+        User creator = userRepository.findByUsername(creatorUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        Task task = mapToEntity(request, creator);
         return mapToResponse(taskRepository.save(task));
     }
 
@@ -72,13 +76,14 @@ public class TaskService {
         return taskRepository.findById(id).map(this::mapToResponse);
     }
 
-    private Task mapToEntity(TaskRequest request) {
+    private Task mapToEntity(TaskRequest request, User creator) {
         Task task = new Task();
         task.setTitle(request.getTitle());
         task.setDescription(request.getDescription());
         task.setStatus(request.getStatus());
         task.setPriority(request.getPriority());
         task.setDueDate(request.getDueDate());
+        task.setCreator(creator);
 
         if (request.getAssigneeId() != null) {
             userRepository.findById(Long.parseLong(request.getAssigneeId().toString()))

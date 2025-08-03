@@ -39,7 +39,7 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        token = authHeader.substring(7); // Remove "Bearer " prefix
+        token = authHeader.substring(7);
 
         try {
             username = jwtUtil.extractUsername(token);

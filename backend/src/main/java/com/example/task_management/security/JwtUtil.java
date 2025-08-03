@@ -13,12 +13,13 @@ public class JwtUtil {
 
     @Value("${app.jwt.secret}")
     private String secret;
+    private static final long EXPIRATION_TIME_MS = 60 * 60 * 1000; // 1 hour
 
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME_MS))
                 .signWith(Keys.hmacShaKeyFor(secret.getBytes()), SignatureAlgorithm.HS256)
                 .compact();
     }

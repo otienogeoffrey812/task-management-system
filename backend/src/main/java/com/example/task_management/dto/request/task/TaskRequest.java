@@ -24,6 +24,6 @@ public class TaskRequest {
     @NotNull(message = "Priority is required")
     private Priority priority;
     private Long assigneeId;
-    private Long creatorId;
+
     private LocalDate dueDate;
 }

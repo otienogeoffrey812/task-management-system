@@ -7,6 +7,7 @@ interface TaskPayload {
   dueDate?: string;
   priority: string;
   assignee?: string | number;
+  creatorId: number;
 }
 
 const taskService = {

@@ -32,10 +32,15 @@ class TaskServiceTest {
 
     private TaskRequest taskRequest;
     private Task task;
+    private User creator;
 
     @BeforeEach
     void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
+
+        creator = new User();
+        creator.setId(100L);
+        creator.setFullName("Creator User");
 
         taskRequest = new TaskRequest();
         taskRequest.setTitle("Test Task");
@@ -51,18 +56,29 @@ class TaskServiceTest {
         task.setStatus(taskRequest.getStatus());
         task.setPriority(taskRequest.getPriority());
         task.setDueDate(taskRequest.getDueDate());
+        task.setCreator(creator);
     }
 
     @Test
     void testCreateTask() {
+        User creator = new User();
+        creator.setId(1L);
+        creator.setUsername("creatorUser");
+        creator.setFullName("Creator User");
+
+        taskRequest.setDueDate(LocalDate.now().plusDays(3));
+
+        when(userRepository.findByUsername("creatorUser")).thenReturn(Optional.of(creator));
         when(taskRepository.save(any(Task.class))).thenReturn(task);
 
-        TaskResponse response = taskService.createTask(taskRequest);
+        TaskResponse response = taskService.createTask(taskRequest, "creatorUser");
 
         assertNotNull(response);
         assertEquals(taskRequest.getTitle(), response.getTitle());
+        verify(userRepository, times(1)).findByUsername("creatorUser");
         verify(taskRepository, times(1)).save(any(Task.class));
     }
+
 
     @Test
     void testGetAllTasks_NoFilters() {

@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+} from 'react';
 
 interface UserType {
   id: number;
@@ -16,14 +22,29 @@ interface AuthContextType {
   logout: () => void;
 }
 
+const decodeJwt = (token: string): { exp: number } | null => {
+  try {
+    const payload = token.split('.')[1];
+    const decoded = atob(payload);
+    return JSON.parse(decoded);
+  } catch (err) {
+    console.error('Failed to decode JWT:', err);
+    return null;
+  }
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [authToken, setAuthToken] = useState<string | null>(localStorage.getItem('authToken'));
+  const [authToken, setAuthToken] = useState<string | null>(
+    localStorage.getItem('authToken')
+  );
   const [user, setUser] = useState<UserType | null>(() => {
     const storedUser = localStorage.getItem('user');
     return storedUser ? JSON.parse(storedUser) : null;
   });
+
+  const logoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const login = (token: string, user: UserType) => {
     localStorage.setItem('authToken', token);
@@ -37,7 +58,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('user');
     setAuthToken(null);
     setUser(null);
+    if (logoutTimerRef.current) {
+      clearTimeout(logoutTimerRef.current);
+    }
   };
+
+  const scheduleAutoLogout = (token: string) => {
+    const decoded = decodeJwt(token);
+    if (!decoded || !decoded.exp) {
+      logout();
+      return;
+    }
+
+    const expiryTime = decoded.exp * 1000;
+    const timeout = expiryTime - Date.now();
+
+    if (timeout <= 0) {
+      logout();
+    } else {
+      logoutTimerRef.current = setTimeout(() => logout(), timeout);
+    }
+  };
+
+  useEffect(() => {
+    if (authToken) {
+      scheduleAutoLogout(authToken);
+    }
+
+    return () => {
+      if (logoutTimerRef.current) {
+        clearTimeout(logoutTimerRef.current);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authToken]);
 
   const value: AuthContextType = {
     user,

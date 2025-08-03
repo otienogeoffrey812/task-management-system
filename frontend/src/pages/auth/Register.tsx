@@ -162,11 +162,11 @@ const Register: React.FC = () => {
 
           <Typography variant="body2" align="center" color="textSecondary" mt={2}>
             By signing up, you agree to the{' '}
-            <Link to="/terms" style={{ color: '#1976d2', fontWeight: 600 }}>
+            <Link style={{ color: '#1976d2', fontWeight: 600 }} to=''>
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link to="/privacy" style={{ color: '#1976d2', fontWeight: 600 }}>
+            <Link to='' style={{ color: '#1976d2', fontWeight: 600 }}>
               Privacy Policy
             </Link>
             , including Cookie Use.

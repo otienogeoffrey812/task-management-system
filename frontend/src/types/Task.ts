@@ -8,4 +8,5 @@ export interface Task {
   priority: Priority;
   status: TaskStatus;
   assigneeId?: number;
+  creatorId: number;
 }

@@ -9,6 +9,7 @@ import {
   CircularProgress,
   Box,
   IconButton,
+  Alert,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useEffect, useState } from 'react';
@@ -26,6 +27,7 @@ interface Props {
   onSave: (task: Task) => void;
   onDelete: (taskId: number) => void;
   user: User | null;
+  error?: string | null;
 }
 
 type TaskForm = Omit<Task, 'id'>;
@@ -38,6 +40,7 @@ const TaskModal: React.FC<Props> = ({
   onSave,
   onDelete,
   user,
+  error
 }) => {
   const {
     register,
@@ -51,10 +54,9 @@ const TaskModal: React.FC<Props> = ({
       priority: Priority.MEDIUM,
       status: defaultStatus || TaskStatus.TODO,
       dueDate: '',
-      assigneeId: undefined,
+      assigneeId: task?.assigneeId || undefined,
     },
   });
-
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -90,7 +92,7 @@ const TaskModal: React.FC<Props> = ({
       }
     };
 
-    if (open && isAdmin) fetchUsers();
+    if (open) fetchUsers();
   }, [open, isAdmin]);
 
   const onSubmit = (data: TaskForm) => {
@@ -113,6 +115,12 @@ const TaskModal: React.FC<Props> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        {error && (
+        <Alert severity="error" sx={{ m: 2 }}>
+            {error}
+        </Alert>
+        )}
+
       <DialogTitle sx={{ m: 0, p: 2, position: 'relative' }}>
         {task ? 'Task Details' : 'Add Task'}
         <IconButton
@@ -202,28 +210,27 @@ const TaskModal: React.FC<Props> = ({
             disabled={!canEditExisting && !canEdit}
           />
 
-          {isAdmin && (
             <TextField
-              label="Assignee"
-              select
-              fullWidth
-              margin="dense"
-              {...register('assigneeId')}
-              disabled={loadingUsers}
+                label="Assignee"
+                select
+                fullWidth
+                margin="dense"
+                defaultValue={task?.assigneeId ?? ''}
+                {...register('assigneeId')}
+                disabled={loadingUsers || !isAdmin}
             >
-              {loadingUsers ? (
+                {loadingUsers ? (
                 <MenuItem value="">
-                  <CircularProgress size={20} />
+                    <CircularProgress size={20} />
                 </MenuItem>
-              ) : (
+                ) : (
                 users.map((user) => (
-                  <MenuItem key={user.id} value={user.id}>
+                    <MenuItem key={user.id} value={user.id}>
                     {user.fullName} ({user.username})
-                  </MenuItem>
+                    </MenuItem>
                 ))
-              )}
+                )}
             </TextField>
-          )}
         </DialogContent>
 
         <DialogActions sx={{ display: 'flex', justifyContent: 'space-between', px: 3 }}>
