@@ -4,11 +4,13 @@ import com.example.task_management.dto.request.task.TaskRequest;
 import com.example.task_management.dto.response.task.TaskResponse;
 import com.example.task_management.entity.Task;
 import com.example.task_management.entity.User;
+import com.example.task_management.entity.enums.Role;
 import com.example.task_management.repository.TaskRepository;
 import com.example.task_management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +26,10 @@ public class TaskService {
     public TaskResponse createTask(TaskRequest request, String creatorUsername) {
         User creator = userRepository.findByUsername(creatorUsername)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (!creator.getRole().equals(Role.ADMIN)) {
+            throw new AccessDeniedException("Only admins can create tasks.");
+        }
 
         Task task = mapToEntity(request, creator);
         return mapToResponse(taskRepository.save(task));
@@ -68,7 +74,14 @@ public class TaskService {
         });
     }
 
-    public void deleteTask(Long id) {
+    public void deleteTask(Long id, String creatorUsername) {
+        User creator = userRepository.findByUsername(creatorUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (!creator.getRole().equals(Role.ADMIN)) {
+            throw new AccessDeniedException("Only admins can create tasks.");
+        }
+
         taskRepository.deleteById(id);
     }
 

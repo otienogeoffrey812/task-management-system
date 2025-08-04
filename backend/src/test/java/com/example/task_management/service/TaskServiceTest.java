@@ -5,12 +5,15 @@ import com.example.task_management.dto.response.task.TaskResponse;
 import com.example.task_management.entity.Task;
 import com.example.task_management.entity.User;
 import com.example.task_management.entity.enums.Priority;
+import com.example.task_management.entity.enums.Role;
 import com.example.task_management.entity.enums.Status;
 import com.example.task_management.repository.TaskRepository;
 import com.example.task_management.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.security.access.AccessDeniedException;
+
 import java.time.LocalDate;
 import java.util.*;
 
@@ -63,6 +66,7 @@ class TaskServiceTest {
     void testCreateTask() {
         User creator = new User();
         creator.setId(1L);
+        creator.setRole(Role.ADMIN);
         creator.setUsername("creatorUser");
         creator.setFullName("Creator User");
 
@@ -77,6 +81,26 @@ class TaskServiceTest {
         assertEquals(taskRequest.getTitle(), response.getTitle());
         verify(userRepository, times(1)).findByUsername("creatorUser");
         verify(taskRepository, times(1)).save(any(Task.class));
+    }
+
+    @Test
+    void testCreateTask_whenUserIsNotAdmin_shouldThrowAccessDenied() {
+        User creator = new User();
+        creator.setId(2L);
+        creator.setUsername("regularUser");
+        creator.setFullName("Regular User");
+        creator.setRole(Role.USER);
+
+        taskRequest.setDueDate(LocalDate.now().plusDays(3));
+
+        when(userRepository.findByUsername("regularUser")).thenReturn(Optional.of(creator));
+
+        assertThrows(AccessDeniedException.class, () -> {
+            taskService.createTask(taskRequest, "regularUser");
+        });
+
+        verify(userRepository, times(1)).findByUsername("regularUser");
+        verify(taskRepository, never()).save(any(Task.class));
     }
 
 
@@ -127,13 +151,42 @@ class TaskServiceTest {
     }
 
     @Test
-    void testDeleteTask() {
-        doNothing().when(taskRepository).deleteById(1L);
+    void testDeleteTask_whenUserIsAdmin_shouldDelete() {
+        Long taskId = 1L;
+        String username = "adminUser";
 
-        taskService.deleteTask(1L);
+        User admin = new User();
+        admin.setUsername(username);
+        admin.setRole(Role.ADMIN);
 
-        verify(taskRepository, times(1)).deleteById(1L);
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(admin));
+        doNothing().when(taskRepository).deleteById(taskId);
+
+        taskService.deleteTask(taskId, username);
+
+        verify(userRepository).findByUsername(username);
+        verify(taskRepository).deleteById(taskId);
     }
+
+    @Test
+    void testDeleteTask_whenUserIsNotAdmin_shouldThrowAccessDenied() {
+        Long taskId = 1L;
+        String username = "regularUser";
+
+        User user = new User();
+        user.setUsername(username);
+        user.setRole(Role.USER);
+
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+
+        assertThrows(AccessDeniedException.class, () -> {
+            taskService.deleteTask(taskId, username);
+        });
+
+        verify(userRepository).findByUsername(username);
+        verify(taskRepository, never()).deleteById(anyLong());
+    }
+
 
     @Test
     void testGetTaskById() {
