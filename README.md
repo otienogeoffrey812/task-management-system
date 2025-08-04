@@ -2,8 +2,6 @@
 
 A full-stack Task Management System built with **React**, **TypeScript**, **Spring Boot**, and **H2 / PostgreSQL**. It supports **role-based access**, **JWT authentication**, and robust task handling features.
 
----
-
 ## Features
 
 - Role-based access: Admin vs regular users
@@ -16,9 +14,7 @@ A full-stack Task Management System built with **React**, **TypeScript**, **Spri
 - Fully responsive UI with Material UI
 - Unit + integration tests (backend)
 
----
-
-## Folder Structure (Frontend)
+## Folder Structure
 
 - task-management-system/
   - backend/         # Spring Boot backend
@@ -43,6 +39,15 @@ A full-stack Task Management System built with **React**, **TypeScript**, **Spri
    ```bash
    cd task-management-system
    ```
+## Seed User Credentials
+
+### Admin  
+- **Username**: `admin`  
+- **Password**: `admin@1234`
+
+### User  
+- **Username**: `user`  
+- **Password**: `user@1234`
 
 ## Screenshots
 ![Task Management Dashboard](https://github.com/otienogeoffrey812/task-management-system/blob/main/tasks-management-dashboard.png)
